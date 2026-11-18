@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Song Log</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Song Log">
+<meta name="theme-color" content="#0d0b1a">
+<link rel="apple-touch-icon" href="icon.png">
+<link rel="icon" href="icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Monoton&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0d0b1a; --panel:#17142b; --panel2:#201c3a; --line:#2e2950;
+  --text:#f3efff; --muted:#a59fc4; --accent:#ff4fa3; --accent2:#3de3ff; --good:#5dff9d; --warn:#ffb340;
+  --r:16px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--text);font-family:"Space Grotesk",system-ui,sans-serif;-webkit-tap-highlight-color:transparent}
+body{padding:env(safe-area-inset-top) env(safe-area-inset-right) calc(env(safe-area-inset-bottom) + 76px) env(safe-area-inset-left);
+  background:radial-gradient(1200px 500px at 50% -200px,#3a1d5c55,transparent),var(--bg);min-height:100vh}
+header{padding:18px 18px 6px;text-align:center}
+h1{font-family:Monoton,cursive;font-weight:400;font-size:clamp(22px,7vw,34px);margin:0;letter-spacing:1px;
+  background:linear-gradient(90deg,var(--accent),#ffd23f,var(--accent2));-webkit-background-clip:text;background-clip:text;color:transparent}
+.sub{color:var(--muted);font-size:13px;margin-top:4px}
+#sync{display:inline-block;margin-top:8px;font-size:11px;padding:3px 9px;border-radius:99px;border:1px solid var(--line);color:var(--muted)}
+#sync.ok{color:var(--good);border-color:#2d6b48}
+main{max-width:640px;margin:0 auto;padding:8px 14px}
+section{display:none}section.on{display:block}
+h2{font-size:15px;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted);margin:22px 4px 10px;font-weight:500}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:14px}
+.songbtns{display:grid;gap:10px}
+.songbtn{display:flex;align-items:center;gap:12px;width:100%;text-align:left;padding:16px;border-radius:var(--r);
+  border:1px solid var(--line);background:var(--panel);color:var(--text);font:inherit;cursor:pointer;transition:transform .08s,background .2s}
+.songbtn:active{transform:scale(.98);background:var(--panel2)}
+.dot{width:14px;height:14px;border-radius:50%;flex:none;box-shadow:0 0 12px currentColor}
+.songbtn .nm{font-weight:700;font-size:17px;line-height:1.2}
+.songbtn .ar{color:var(--muted);font-size:13px}
+.songbtn .ct{margin-left:auto;font-size:13px;color:var(--muted);text-align:right;white-space:nowrap}
+.songbtn.flash{background:#2b1640;border-color:var(--accent)}
+details{margin-top:12px}
+summary{color:var(--muted);font-size:14px;cursor:pointer;padding:6px 4px}
+input,select{font:inherit;color:var(--text);background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:10px 12px;width:100%;min-width:0}
+input[type=datetime-local],input[type=date]{color-scheme:dark}
+label{font-size:13px;color:var(--muted);display:block;margin:0 0 6px}
+.row{display:flex;gap:10px;align-items:flex-end}
+.row>*{flex:1}
+.btn{font:inherit;font-weight:500;border-radius:12px;padding:11px 16px;border:1px solid var(--line);background:var(--panel2);color:var(--text);cursor:pointer}
+.btn.pri{background:var(--accent);border-color:var(--accent);color:#1a0010}
+.btn.danger{color:#ff7a8a;border-color:#5a2533}
+.btn.sm{padding:7px 11px;font-size:13px;border-radius:10px}
+.btn:disabled{opacity:.4}
+.list{display:flex;flex-direction:column}
+.li{display:flex;align-items:center;gap:10px;padding:11px 2px;border-bottom:1px solid var(--line)}
+.li:last-child{border-bottom:0}
+.li .grow{flex:1;min-width:0}
+.li .t{font-size:12px;color:var(--muted)}
+.x{background:none;border:0;color:var(--muted);font-size:20px;cursor:pointer;padding:4px 8px}
+.chips{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex:none;font:inherit;font-size:13px;padding:7px 12px;border-radius:99px;border:1px solid var(--line);background:var(--panel);color:var(--muted);cursor:pointer}
+.chip.on{background:var(--text);color:var(--bg);border-color:var(--text)}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.stat{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:12px}
+.stat b{display:block;font-size:24px}
+.stat span{font-size:12px;color:var(--muted)}
+.bar{margin:12px 0}
+.bar .top{display:flex;justify-content:space-between;font-size:14px;margin-bottom:5px;gap:8px}
+.bar .top span:last-child{color:var(--muted);white-space:nowrap}
+.track{height:12px;background:var(--panel2);border-radius:99px;overflow:hidden}
+.fill{height:100%;border-radius:99px}
+.trend{display:flex;flex-direction:column;gap:7px}
+.trow{display:grid;grid-template-columns:92px 1fr 28px;gap:8px;align-items:center;font-size:12px}
+.trow .lbl{color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.stack{display:flex;height:16px;border-radius:5px;overflow:hidden;background:var(--panel2)}
+.trow .n{text-align:right;color:var(--muted)}
+.legend{display:flex;flex-wrap:wrap;gap:6px 12px;font-size:12px;color:var(--muted);margin-bottom:12px}
+.legend i{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:5px}
+.empty{color:var(--muted);text-align:center;padding:24px 10px;font-size:14px}
+.note{font-size:13px;color:var(--muted);line-height:1.5}
+textarea{width:100%;min-height:110px;font:12px ui-monospace,monospace;color:var(--text);background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:10px}
+nav{position:fixed;left:0;right:0;bottom:0;display:flex;background:#100d22ee;backdrop-filter:blur(10px);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom);z-index:5}
+nav button{flex:1;background:none;border:0;color:var(--muted);font:inherit;font-size:12px;padding:10px 0 12px;cursor:pointer}
+nav button .ic{display:block;font-size:20px;margin-bottom:2px}
+nav button.on{color:var(--accent)}
+#toast{position:fixed;left:50%;bottom:calc(90px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(20px);opacity:0;pointer-events:none;
+  background:var(--text);color:var(--bg);padding:11px 14px 11px 16px;border-radius:12px;font-size:14px;display:flex;gap:14px;align-items:center;transition:.2s;z-index:9;max-width:92vw}
+#toast.show{opacity:1;transform:translateX(-50%);pointer-events:auto}
+#toast button{background:none;border:0;color:var(--accent);font:inherit;font-weight:700;cursor:pointer}
+#modal{position:fixed;inset:0;background:#0009;display:none;align-items:center;justify-content:center;z-index:10;padding:20px}
+#modal.show{display:flex}
+#modal .card{max-width:380px;width:100%}
+#modal p{margin:0 0 16px;line-height:1.45}
+.mrow{display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap}
+.tag{font-size:11px;padding:2px 7px;border-radius:99px;background:var(--panel2);color:var(--muted);margin-left:6px}
+</style>
+</head>
+<body>
+<header>
+  <h1>Awesome Log</h1>
+  <div class="sub">Which song did Cosmic Rewind give you?</div>
+  <span id="sync">Saved on this phone · export to back up</span>
+</header>
+
+<main>
+  <!-- LOG -->
+  <section id="v-log" class="on">
+    <h2>Tap the song you got</h2>
+    <div class="songbtns" id="songBtns"></div>
+    <details>
+      <summary>Logging a past ride? Set the date &amp; time</summary>
+      <div class="card" style="margin-top:8px">
+        <label for="when">Ride date &amp; time (leave blank for now)</label>
+        <div class="row"><input type="datetime-local" id="when"><button class="btn sm" id="whenClear" style="flex:none">Now</button></div>
+      </div>
+    </details>
+    <h2>Recent rides</h2>
+    <div class="card"><div class="list" id="recent"></div></div>
+  </section>
+
+  <!-- REPORTS -->
+  <section id="v-rep">
+    <h2>Time period</h2>
+    <div class="chips" id="periodChips"></div>
+    <div class="row" id="customRange" style="display:none;margin-top:10px">
+      <div><label>From</label><input type="date" id="from"></div>
+      <div><label>To</label><input type="date" id="to"></div>
+    </div>
+    <div class="stats" style="margin-top:14px">
+      <div class="stat"><b id="sRides">0</b><span>rides</span></div>
+      <div class="stat"><b id="sSongs">0</b><span>songs heard</span></div>
+      <div class="stat"><b id="sTop">–</b><span id="sTopL">top song</span></div>
+    </div>
+    <h2>Song breakdown</h2>
+    <div class="card" id="breakdown"></div>
+    <h2>Rides over time</h2>
+    <div class="chips" id="groupChips"></div>
+    <div class="card" style="margin-top:10px"><div class="legend" id="legend"></div><div class="trend" id="trend"></div></div>
+  </section>
+
+  <!-- HISTORY -->
+  <section id="v-his">
+    <h2>All rides</h2>
+    <div class="chips" id="hisFilter"></div>
+    <div class="card" style="margin-top:10px"><div class="list" id="history"></div></div>
+  </section>
+
+  <!-- SETTINGS -->
+  <section id="v-set">
+    <h2>Songs</h2>
+    <div class="card"><div class="list" id="songList"></div></div>
+    <p class="note" style="margin:8px 4px 0">Retire a song if it's swapped out: it disappears from the log buttons but stays in your history and reports.</p>
+    <h2>Add a song</h2>
+    <div class="card">
+      <div class="row" style="flex-wrap:wrap">
+        <div style="flex:2 1 180px"><label for="newName">Song</label><input id="newName" placeholder="Song title"></div>
+        <div style="flex:1 1 140px"><label for="newArtist">Artist</label><input id="newArtist" placeholder="Artist"></div>
+      </div>
+      <button class="btn pri" id="addSong" style="margin-top:12px;width:100%">Add song</button>
+    </div>
+
+    <h2>Backup &amp; move to a new phone</h2>
+    <div class="card">
+      <p class="note" style="margin-top:0">Your rides live on this phone only. Export now and then (tap Export, then "Save to Files" or email it to yourself). On a new phone, open the app and Import that file.</p>
+      <div class="row" style="flex-wrap:wrap">
+        <button class="btn" id="exportBtn">Export file</button>
+        <button class="btn" id="copyBtn">Copy backup text</button>
+        <button class="btn" id="importBtn">Import file</button>
+      </div>
+      <input type="file" id="fileIn" accept=".json,application/json,text/plain" hidden>
+      <details>
+        <summary>Or paste backup text</summary>
+        <textarea id="pasteIn" placeholder='Paste backup text here'></textarea>
+        <button class="btn sm" id="pasteImport" style="margin-top:8px">Import pasted text</button>
+      </details>
+    </div>
+
+    <h2>Danger zone</h2>
+    <div class="card"><button class="btn danger" id="wipe">Delete all rides</button></div>
+  </section>
+</main>
+
+<nav>
+  <button data-v="log" class="on"><span class="ic">🎧</span>Log</button>
+  <button data-v="rep"><span class="ic">📊</span>Reports</button>
+  <button data-v="his"><span class="ic">🕘</span>History</button>
+  <button data-v="set"><span class="ic">⚙️</span>Settings</button>
+</nav>
+
+<div id="toast"><span id="toastMsg"></span><button id="toastBtn"></button></div>
+<div id="modal"><div class="card"><p id="modalMsg"></p><div class="mrow" id="modalBtns"></div></div></div>
+
+<script>
+(() => {
+const LS_KEY = "cosmicSongTracker.v1";
+const COLORS = ["#ff4fa3","#3de3ff","#ffd23f","#5dff9d","#b78cff","#ff8a3d","#4f8bff","#ff5f5f","#c6ff3d","#3dffd0","#ff9be0","#9aa7ff"];
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+const DEFAULT_SONGS = [
+  ["September","Earth, Wind & Fire"],
+  ["Conga","Gloria Estefan & Miami Sound Machine"],
+  ["I Ran (So Far Away)","A Flock of Seagulls"],
+  ["Disco Inferno","The Trammps"],
+  ["Everybody Wants to Rule the World","Tears for Fears"],
+  ["One Way or Another","Blondie"],
+].map(([name, artist], i) => ({ id: "s" + i, name, artist, retired: false, color: COLORS[i] }));
+
+function freshState(){ return { v: 1, songs: DEFAULT_SONGS.map(s => ({...s})), rides: [] }; }
+
+function clean(obj){
+  if (!obj || !Array.isArray(obj.songs) || !Array.isArray(obj.rides)) return null;
+  const songs = obj.songs.filter(s => s && typeof s.id === "string" && typeof s.name === "string")
+    .map((s, i) => ({ id: s.id, name: String(s.name).slice(0, 120), artist: String(s.artist || "").slice(0, 120), retired: !!s.retired, color: typeof s.color === "string" ? s.color : COLORS[i % COLORS.length] }));
+  const ids = new Set(songs.map(s => s.id));
+  const rides = obj.rides.filter(r => r && typeof r.s === "string" && ids.has(r.s) && isFinite(r.t))
+    .map(r => ({ id: typeof r.id === "string" ? r.id : uid(), s: r.s, t: Number(r.t) }));
+  return { v: 1, songs, rides };
+}
+
+let state = null;
+try { state = clean(JSON.parse(localStorage.getItem(LS_KEY))); } catch (e) {}
+const hadLocal = !!state;
+if (!state) state = freshState();
+
+/* ---------- persistence ---------- */
+let remoteRef = null, writing = false, writeAgain = false;
+function cacheLocal(){ try { localStorage.setItem(LS_KEY, JSON.stringify(state)); } catch (e) {} }
+async function pushRemote(){
+  if (!remoteRef) return;
+  if (writing) { writeAgain = true; return; }
+  writing = true;
+  try { await remoteRef.set({ v: 1, songs: state.songs, rides: state.rides, updated: Date.now() }); setSync(true); }
+  catch (e) { setSync(false, e && e.code === "quota_exceeded" ? "Account storage full" : null); }
+  writing = false;
+  if (writeAgain) { writeAgain = false; pushRemote(); }
+}
+function save(){ cacheLocal(); pushRemote(); render(); }
+function setSync(ok, msg){
+  const el = document.getElementById("sync");
+  el.className = ok ? "ok" : "";
+  el.textContent = msg || "Saved on this phone · export to back up";
+}
+
+try { navigator.storage && navigator.storage.persist && navigator.storage.persist(); } catch (e) {}
+
+/* ---------- helpers ---------- */
+const $ = id => document.getElementById(id);
+const songById = id => state.songs.find(s => s.id === id);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const fmtTime = t => new Date(t).toLocaleString([], { month: "short", day: "numeric", year: new Date(t).getFullYear() !== new Date().getFullYear() ? "numeric" : undefined, hour: "numeric", minute: "2-digit" });
+function sod(d){ d = new Date(d); d.setHours(0,0,0,0); return d; }
+function sow(d){ d = sod(d); d.setDate(d.getDate() - d.getDay()); return d; }
+function nextColor(){ const used = new Set(state.songs.map(s => s.color)); return COLORS.find(c => !used.has(c)) || COLORS[state.songs.length % COLORS.length]; }
+
+let toastTimer;
+function toast(msg, btnLabel, fn){
+  $("toastMsg").textContent = msg;
+  const b = $("toastBtn"); b.textContent = btnLabel || ""; b.style.display = btnLabel ? "" : "none";
+  b.onclick = () => { $("toast").classList.remove("show"); fn && fn(); };
+  $("toast").classList.add("show"); clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => $("toast").classList.remove("show"), 4500);
+}
+function ask(msg, buttons){
+  $("modalMsg").textContent = msg;
+  const box = $("modalBtns"); box.innerHTML = "";
+  buttons.forEach(([label, cls, fn]) => {
+    const b = document.createElement("button"); b.className = "btn " + (cls || ""); b.textContent = label;
+    b.onclick = () => { $("modal").classList.remove("show"); fn && fn(); }; box.appendChild(b);
+  });
+  $("modal").classList.add("show");
+}
+
+/* ---------- navigation ---------- */
+document.querySelectorAll("nav button").forEach(b => b.onclick = () => {
+  document.querySelectorAll("nav button").forEach(x => x.classList.toggle("on", x === b));
+  document.querySelectorAll("section").forEach(s => s.classList.toggle("on", s.id === "v-" + b.dataset.v));
+  window.scrollTo(0, 0); render();
+});
+
+/* ---------- logging ---------- */
+$("whenClear").onclick = () => { $("when").value = ""; };
+function logRide(songId, btn){
+  const w = $("when").value;
+  const t = w ? new Date(w).getTime() : Date.now();
+  const ride = { id: uid(), s: songId, t };
+  state.rides.push(ride);
+  save();
+  if (navigator.vibrate) try { navigator.vibrate(30); } catch (e) {}
+  toast("Logged " + songById(songId).name, "Undo", () => {
+    state.rides = state.rides.filter(r => r.id !== ride.id); save();
+  });
+}
+
+/* ---------- reports state ---------- */
+const PERIODS = [["7d","Last 7 days"],["30d","Last 30 days"],["week","This week"],["month","This month"],["year","This year"],["all","All time"],["custom","Custom"]];
+const GROUPS = [["day","Day"],["week","Week"],["month","Month"],["year","Year"]];
+let period = "all", group = "month", hisSong = "all";
+
+function periodRange(){
+  const now = new Date(); let a = null, b = null;
+  if (period === "7d") { a = sod(now); a.setDate(a.getDate() - 6); }
+  else if (period === "30d") { a = sod(now); a.setDate(a.getDate() - 29); }
+  else if (period === "week") a = sow(now);
+  else if (period === "month") a = new Date(now.getFullYear(), now.getMonth(), 1);
+  else if (period === "year") a = new Date(now.getFullYear(), 0, 1);
+  else if (period === "custom") {
+    if ($("from").value) a = new Date($("from").value + "T00:00");
+    if ($("to").value) { b = new Date($("to").value + "T00:00"); b.setDate(b.getDate() + 1); }
+  }
+  return [a ? a.getTime() : -Infinity, b ? b.getTime() : Infinity];
+}
+function bucketKey(t){
+  const d = new Date(t);
+  if (group === "day") return sod(d).getTime();
+  if (group === "week") return sow(d).getTime();
+  if (group === "month") return new Date(d.getFullYear(), d.getMonth(), 1).getTime();
+  return new Date(d.getFullYear(), 0, 1).getTime();
+}
+function bucketLabel(k){
+  const d = new Date(k);
+  if (group === "day") return d.toLocaleDateString([], { weekday: "short", month: "short", day: "numeric" });
+  if (group === "week") return "Wk of " + d.toLocaleDateString([], { month: "short", day: "numeric" });
+  if (group === "month") return d.toLocaleDateString([], { month: "short", year: "numeric" });
+  return String(d.getFullYear());
+}
+function chips(el, items, cur, fn){
+  el.innerHTML = items.map(([k, l]) => `<button class="chip ${k === cur ? "on" : ""}" data-k="${esc(k)}">${esc(l)}</button>`).join("");
+  el.querySelectorAll(".chip").forEach(c => c.onclick = () => fn(c.dataset.k));
+}
+$("from").onchange = $("to").onchange = () => render();
+
+/* ---------- render ---------- */
+function render(){
+  const rides = state.rides.slice().sort((a, b) => b.t - a.t);
+  const totals = {}; rides.forEach(r => totals[r.s] = (totals[r.s] || 0) + 1);
+
+  // Log buttons
+  const active = state.songs.filter(s => !s.retired);
+  $("songBtns").innerHTML = active.length ? active.map(s => `
+    <button class="songbtn" data-id="${esc(s.id)}">
+      <span class="dot" style="background:${s.color};color:${s.color}"></span>
+      <span><div class="nm">${esc(s.name)}</div><div class="ar">${esc(s.artist)}</div></span>
+      <span class="ct">${totals[s.id] || 0}×</span>
+    </button>`).join("") : `<div class="card empty">No active songs. Add some in Settings.</div>`;
+  $("songBtns").querySelectorAll(".songbtn").forEach(b => b.onclick = () => {
+    b.classList.add("flash"); setTimeout(() => b.classList.remove("flash"), 350); logRide(b.dataset.id, b);
+  });
+
+  // Recent
+  $("recent").innerHTML = rides.length ? rides.slice(0, 5).map(rideRow).join("") : `<div class="empty">No rides yet. Go ride! 🚀</div>`;
+  bindDeletes($("recent"));
+
+  // History
+  const filtOpts = [["all","All songs"]].concat(state.songs.filter(s => totals[s.id]).map(s => [s.id, s.name]));
+  if (!filtOpts.some(o => o[0] === hisSong)) hisSong = "all";
+  chips($("hisFilter"), filtOpts, hisSong, k => { hisSong = k; render(); });
+  const hr = rides.filter(r => hisSong === "all" || r.s === hisSong);
+  $("history").innerHTML = hr.length ? hr.map(rideRow).join("") : `<div class="empty">Nothing logged yet.</div>`;
+  bindDeletes($("history"));
+
+  // Reports
+  chips($("periodChips"), PERIODS, period, k => { period = k; render(); });
+  chips($("groupChips"), GROUPS, group, k => { group = k; render(); });
+  $("customRange").style.display = period === "custom" ? "flex" : "none";
+  const [a, b] = periodRange();
+  const pr = rides.filter(r => r.t >= a && r.t < b);
+  const counts = {}; pr.forEach(r => counts[r.s] = (counts[r.s] || 0) + 1);
+  const ranked = state.songs.filter(s => counts[s.id] || !s.retired).sort((x, y) => (counts[y.id] || 0) - (counts[x.id] || 0));
+  $("sRides").textContent = pr.length;
+  $("sSongs").textContent = Object.keys(counts).length + "/" + active.length;
+  const top = ranked[0] && counts[ranked[0].id] ? ranked[0] : null;
+  const tie = top && ranked[1] && counts[ranked[1].id] === counts[top.id];
+  $("sTop").textContent = top ? (tie ? "Tie" : counts[top.id] + "×") : "–";
+  $("sTopL").textContent = top ? (tie ? "top song" : top.name) : "top song";
+  $("sTop").style.color = top && !tie ? top.color : "";
+  const max = Math.max(1, ...Object.values(counts));
+  $("breakdown").innerHTML = pr.length ? ranked.map(s => {
+    const c = counts[s.id] || 0, pct = pr.length ? Math.round(c / pr.length * 100) : 0;
+    return `<div class="bar"><div class="top"><span>${esc(s.name)}${s.retired ? '<span class="tag">retired</span>' : ""}</span><span>${c} · ${pct}%</span></div>
+      <div class="track"><div class="fill" style="width:${c / max * 100}%;background:${s.color}"></div></div></div>`;
+  }).join("") + missingNote(active, counts) : `<div class="empty">No rides in this period.</div>`;
+
+  // Trend
+  const buckets = new Map();
+  pr.forEach(r => { const k = bucketKey(r.t); if (!buckets.has(k)) buckets.set(k, {}); const o = buckets.get(k); o[r.s] = (o[r.s] || 0) + 1; });
+  const keys = [...buckets.keys()].sort((x, y) => y - x);
+  const bmax = Math.max(1, ...keys.map(k => Object.values(buckets.get(k)).reduce((p, n) => p + n, 0)));
+  const shown = state.songs.filter(s => counts[s.id]);
+  $("legend").innerHTML = shown.map(s => `<span><i style="background:${s.color}"></i>${esc(s.name)}</span>`).join("");
+  $("trend").innerHTML = keys.length ? keys.map(k => {
+    const o = buckets.get(k), tot = Object.values(o).reduce((p, n) => p + n, 0);
+    const segs = state.songs.filter(s => o[s.id]).map(s => `<div title="${esc(s.name)}: ${o[s.id]}" style="width:${o[s.id] / bmax * 100}%;background:${s.color}"></div>`).join("");
+    return `<div class="trow"><span class="lbl">${esc(bucketLabel(k))}</span><div class="stack">${segs}</div><span class="n">${tot}</span></div>`;
+  }).join("") : `<div class="empty">No rides in this period.</div>`;
+
+  // Settings song list
+  $("songList").innerHTML = state.songs.map((s, i) => `
+    <div class="li" data-id="${esc(s.id)}">
+      <span class="dot" style="background:${s.color};color:${s.color}"></span>
+      <div class="grow"><div>${esc(s.name)}${s.retired ? '<span class="tag">retired</span>' : ""}</div><div class="t">${esc(s.artist)} · ${totals[s.id] || 0} rides</div></div>
+      <button class="btn sm" data-act="edit">Edit</button>
+      <button class="btn sm" data-act="ret">${s.retired ? "Restore" : "Retire"}</button>
+      ${totals[s.id] ? "" : `<button class="x" data-act="del" aria-label="Delete">×</button>`}
+    </div>`).join("");
+  $("songList").querySelectorAll("button").forEach(b => b.onclick = () => songAction(b.closest(".li").dataset.id, b.dataset.act, b));
+}
+function missingNote(active, counts){
+  const miss = active.filter(s => !counts[s.id]);
+  if (!miss.length) return `<p class="note" style="margin:12px 0 0">🏆 You've heard every active song in this period.</p>`;
+  return `<p class="note" style="margin:12px 0 0">Still waiting on: ${miss.map(s => esc(s.name)).join(", ")}</p>`;
+}
+function rideRow(r){
+  const s = songById(r.s);
+  return `<div class="li"><span class="dot" style="background:${s.color};color:${s.color}"></span>
+    <div class="grow"><div>${esc(s.name)}</div><div class="t">${esc(fmtTime(r.t))}</div></div>
+    <button class="x" data-rid="${esc(r.id)}" aria-label="Delete ride">×</button></div>`;
+}
+function bindDeletes(el){
+  el.querySelectorAll("[data-rid]").forEach(b => b.onclick = () => {
+    const ride = state.rides.find(r => r.id === b.dataset.rid); if (!ride) return;
+    state.rides = state.rides.filter(r => r !== ride); save();
+    toast("Ride deleted", "Undo", () => { state.rides.push(ride); save(); });
+  });
+}
+
+/* ---------- song settings ---------- */
+function songAction(id, act, btn){
+  const s = songById(id); if (!s) return;
+  if (act === "ret") { s.retired = !s.retired; save(); }
+  else if (act === "del") ask(`Delete "${s.name}"?`, [["Cancel"], ["Delete", "danger", () => { state.songs = state.songs.filter(x => x !== s); save(); }]]);
+  else if (act === "edit") {
+    const row = btn.closest(".li");
+    row.innerHTML = `<div class="grow" style="display:flex;flex-direction:column;gap:8px">
+      <input value="${esc(s.name)}" class="eN" placeholder="Song"><input value="${esc(s.artist)}" class="eA" placeholder="Artist">
+      <div style="display:flex;gap:8px"><button class="btn sm pri eS">Save</button><button class="btn sm eC">Cancel</button></div></div>`;
+    row.querySelector(".eS").onclick = () => { const n = row.querySelector(".eN").value.trim(); if (!n) return; s.name = n; s.artist = row.querySelector(".eA").value.trim(); save(); };
+    row.querySelector(".eC").onclick = render;
+    row.querySelector(".eN").focus();
+  }
+}
+$("addSong").onclick = () => {
+  const name = $("newName").value.trim(); if (!name) { $("newName").focus(); return; }
+  state.songs.push({ id: uid(), name, artist: $("newArtist").value.trim(), retired: false, color: nextColor() });
+  $("newName").value = $("newArtist").value = ""; save(); toast("Added " + name);
+};
+$("wipe").onclick = () => ask("Delete every logged ride? Your song list stays. Export a backup first if you might want them back.",
+  [["Cancel"], ["Delete all", "danger", () => { state.rides = []; save(); toast("All rides deleted"); }]]);
+
+/* ---------- export / import ---------- */
+function backupText(){ return JSON.stringify({ app: "cosmic-rewind-song-tracker", v: 1, exportedAt: new Date().toISOString(), songs: state.songs, rides: state.rides }); }
+$("exportBtn").onclick = async () => {
+  const name = "song-log-backup-" + new Date().toISOString().slice(0, 10) + ".json";
+  const blob = new Blob([backupText()], { type: "application/json" });
+  try {
+    const file = new File([blob], name, { type: "application/json" });
+    if (navigator.canShare && navigator.canShare({ files: [file] })) { await navigator.share({ files: [file], title: "Song Log backup" }); return; }
+  } catch (e) { if (e && e.name === "AbortError") return; }
+  try {
+    const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = name;
+    document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+    toast("Backup saved");
+  } catch (e) { copyBackup("Backup text copied — paste it into a note or email."); }
+};
+async function copyBackup(msg){
+  try { await navigator.clipboard.writeText(backupText()); toast(msg || "Backup text copied"); }
+  catch (e) { $("pasteIn").value = backupText(); $("pasteIn").closest("details").open = true; $("pasteIn").select(); toast("Select the text below and copy it"); }
+}
+$("copyBtn").onclick = () => copyBackup();
+$("importBtn").onclick = () => $("fileIn").click();
+$("fileIn").onchange = async e => {
+  const f = e.target.files[0]; e.target.value = ""; if (!f) return;
+  importText(await f.text());
+};
+$("pasteImport").onclick = () => importText($("pasteIn").value);
+function importText(txt){
+  let data; try { data = clean(JSON.parse(txt)); } catch (e) {}
+  if (!data) { ask("That doesn't look like a backup from this tracker.", [["OK", "pri"]]); return; }
+  ask(`Backup has ${data.rides.length} rides and ${data.songs.length} songs. Replace what's here, or merge them together?`, [
+    ["Cancel"],
+    ["Merge", "", () => {
+      const sIds = new Set(state.songs.map(s => s.id)); data.songs.forEach(s => { if (!sIds.has(s.id)) state.songs.push(s); });
+      const rIds = new Set(state.rides.map(r => r.id)); let n = 0; data.rides.forEach(r => { if (!rIds.has(r.id)) { state.rides.push(r); n++; } });
+      save(); toast(`Merged — ${n} new rides added`); $("pasteIn").value = "";
+    }],
+    ["Replace", "pri", () => { state = data; save(); toast("Backup restored"); $("pasteIn").value = ""; }],
+  ]);
+}
+
+render();
+})();
+</script>
+</body>
+</html>
